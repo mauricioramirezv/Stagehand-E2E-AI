@@ -175,10 +175,9 @@ Actions también ejecuta esta comprobación sin almacenar secretos.
 
 1. Stagehand abre la página de login.
 2. `act` identifica y completa los campos mediante instrucciones naturales.
-3. `observe` propone la acción para iniciar sesión.
-4. `act` ejecuta la acción observada.
-5. Un localizador CSS comprueba exactamente el mensaje de éxito.
-6. Se imprimen las métricas de inferencia.
+3. `act` identifica y pulsa el botón para iniciar sesión.
+4. Un localizador CSS comprueba exactamente el mensaje de éxito.
+5. Se imprimen las métricas de inferencia.
 
 Las credenciales públicas del sitio de demostración se pasan como variables de
 Stagehand. En un sistema real deben proceder de variables de entorno o de un
@@ -247,6 +246,12 @@ Invoke-RestMethod http://localhost:11434/api/tags
 
 Los modelos pequeños pueden no respetar el esquema JSON que Stagehand necesita.
 Pruebe un modelo con mejor capacidad de instrucciones o use OpenAI/Gemini.
+
+Si `test:observe` informa que `elementId` no cumple el patrón `número-número`,
+el navegador y Ollama sí están funcionando: el modelo local no respetó el
+esquema estructurado de Stagehand. Pruebe un modelo local más capaz o ejecute
+ese ejercicio con OpenAI/Gemini. La prueba `test:ollama` no depende de
+`observe` para completar el login.
 
 ### Necesita más información de diagnóstico
 

@@ -20,12 +20,9 @@ export async function runLoginScenario(provider: Provider): Promise<void> {
       variables: { clave: 'SuperSecretPassword!' },
     });
 
-    const options = await session.stagehand.observe('Encuentra el botón para iniciar sesión', {
+    await session.stagehand.act('Haz clic en el botón Login para iniciar sesión', {
       page: session.page,
     });
-    const loginAction = options.data[0];
-    if (!loginAction) throw new Error('La IA no encontró una acción para iniciar sesión.');
-    await session.stagehand.act(loginAction, { page: session.page });
 
     await session.page.waitForSelector('#flash', { state: 'visible', timeout: 15_000 });
     const message = await session.page.locator('#flash').innerText();
