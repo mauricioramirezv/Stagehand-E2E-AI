@@ -1,280 +1,265 @@
-# Stagehand E2E AI
+# Pruebas E2E con Stagehand e inteligencia artificial
 
-Ejemplo para mostrar cómo usar Stagehand para pruebas E2E con inteligencia artificial.
+Proyecto educativo para automatizar una prueba de inicio de sesión mediante
+instrucciones en lenguaje natural y comprobar el resultado con una aserción
+determinística. Incluye ejemplos con OpenAI, Google Gemini y Ollama local.
 
-Este proyecto usa la página:
+El proyecto está actualizado a **Stagehand 4.3.0** y usa su API de navegador
+local. No utiliza Playwright directamente.
 
-https://the-internet.herokuapp.com/login
+## Objetivos de aprendizaje
 
-La prueba automatiza un login real usando instrucciones en lenguaje natural y validaciones con Playwright.
+- Diferenciar una acción asistida por IA de una verificación determinística.
+- Usar `act`, `observe` y `extract` con Stagehand.
+- Ejecutar el mismo escenario con distintos proveedores de modelos.
+- Evitar que una excepción quede oculta y produzca un falso resultado exitoso.
+- Consultar métricas de tokens y tiempo de inferencia.
 
-## Objetivo del ejemplo
+## Escenarios incluidos
 
-Mostrar cómo una prueba E2E puede combinar:
+| Comando | Proveedor | Qué valida |
+|---|---|---|
+| `npm run test:ollama` | Ollama local | Login mediante IA y mensaje final exacto |
+| `npm run test:openai` | OpenAI | Login mediante IA y mensaje final exacto |
+| `npm run test:gemini` | Google Gemini | Login mediante IA y mensaje final exacto |
+| `npm run test:observe` | Configurable | `observe`, extracción estructurada y título esperado |
 
-- Stagehand
-- Playwright
-- lenguaje natural
-- modelo LLM local con Ollama
-- modelo OpenAI opcional
-- validaciones determinísticas con Playwright
-
-La idea central es que la IA ayude a interactuar con la interfaz, pero las verificaciones finales deben seguir siendo claras, reproducibles y determinísticas.
-
-## Estructura del proyecto
-
-```text
-stagehand-e2e-ai-demo/
-├── package.json
-├── tsconfig.json
-├── .env.example
-├── .gitignore
-├── README.md
-├── src/
-│   ├── assert.ts
-│   ├── stagehand-ollama.ts
-│   └── stagehand-openai.ts
-└── tests/
-    ├── login-ollama.e2e.ts
-    ├── login-openai.e2e.ts
-    └── observe-extract.e2e.ts
-```
+Los ejemplos utilizan <https://the-internet.herokuapp.com/>. Al ser un sitio
+externo, su disponibilidad no depende de este repositorio.
 
 ## Requisitos
 
-OJO...
+- Node.js **22.18.0 o superior**.
+- npm.
+- Google Chrome o Chromium instalado.
+- Uno de estos accesos:
+  - Ollama local y un modelo compatible con salida JSON estructurada;
+  - una clave de OpenAI;
+  - una clave de Google Gemini.
 
-Instalar previamente:
-
-- Node.js 20 o superior
-- npm
-- Ollama, si se usará la opción local
-- Visual Studio Code, recomendado para clase
+No es necesario ejecutar `playwright install`. Stagehand 4 inicia el navegador
+local mediante `localBrowser`.
 
 ## Instalación
 
-Desde la carpeta del proyecto:
+En PowerShell:
 
-```bash
-npm install
+```powershell
+git clone https://github.com/mauricioramirezv/Stagehand-E2E-AI.git
+Set-Location Stagehand-E2E-AI
+npm ci
+Copy-Item .env.example .env
+npm run typecheck
 ```
 
-Instalar Chromium para Playwright:
+En Linux o macOS:
 
 ```bash
-npm run install:browsers
-```
-
-Crear el archivo `.env`:
-
-```bash
-copy .env.example .env
-```
-
-En macOS o Linux:
-
-```bash
+git clone https://github.com/mauricioramirezv/Stagehand-E2E-AI.git
+cd Stagehand-E2E-AI
+npm ci
 cp .env.example .env
+npm run typecheck
 ```
 
-## Opción 1: Ejecutar con Ollama local sin tokens
+Edite `.env` y configure únicamente el proveedor que utilizará. El archivo
+`.env` está excluido de Git; nunca publique claves reales.
 
-Esta opción no requiere tokens de OpenAI, Anthropic, Google ni Browserbase.
+## Ejecutar cada ejemplo
 
-### 1. Instalar Ollama
+### 1. Login con Ollama
 
-Sitio oficial:
+Instale Ollama, descargue un modelo y compruebe que el servicio responda:
 
-https://ollama.com/
-
-### 2. Descargar un modelo
-
-Modelo recomendado para empezar:
-
-```bash
-ollama pull llama3.1
+```powershell
+ollama pull qwen2.5:7b
+ollama run qwen2.5:7b
 ```
 
-También puede probar:
-
-```bash
-ollama pull qwen2.5
-```
-
-### 3. Verificar que Ollama funcione
-
-```bash
-ollama run llama3.1
-```
-
-Si el modelo responde, Ollama está funcionando.
-
-### 4. Verificar el archivo `.env`
+En `.env`:
 
 ```env
 OLLAMA_BASE_URL=http://localhost:11434/v1
 OLLAMA_API_KEY=ollama
-OLLAMA_MODEL=llama3.1
+OLLAMA_MODEL=qwen2.5:7b
 HEADLESS=false
 ```
 
-### 5. Ejecutar la prueba E2E con Ollama
+Ejecución:
 
-```bash
+```powershell
 npm run test:ollama
 ```
 
-## Opción 2: Ejecutar con OpenAI
+Stagehand 4 no reconoce `ollama/...` como proveedor nativo. Por eso este
+proyecto incorpora un adaptador para la API compatible con OpenAI de Ollama.
+Esta alternativa es útil para clase, pero puede ser más lenta y menos estable
+que un modelo alojado.
 
-Esta opción es más estable para demostraciones, pero requiere API Key.
+### 2. Login con OpenAI
 
-### 1. Configurar `.env`
+En `.env`:
 
 ```env
-OPENAI_API_KEY=sk-your-key-here
+OPENAI_API_KEY=su_clave_real
 OPENAI_MODEL=openai/gpt-4.1-mini
 HEADLESS=false
 ```
 
-### 2. Ejecutar la prueba E2E con OpenAI
+Ejecución:
 
-```bash
+```powershell
 npm run test:openai
 ```
 
-## Opción 3: Observe y Extract con IA
+### 3. Login con Google Gemini
 
-Este ejemplo muestra dos funciones importantes de Stagehand:
+En `.env`:
 
-- observe: la IA analiza la página y propone elementos o acciones.
-- extract: la IA extrae información estructurada desde la página.
+```env
+GOOGLE_GENERATIVE_AI_API_KEY=su_clave_real
+GEMINI_MODEL=google/gemini-2.5-flash
+HEADLESS=false
+```
 
-Ejecutar:
+Ejecución:
 
-```bash
+```powershell
+npm run test:gemini
+```
+
+### 4. Observe y Extract
+
+Este ejemplo busca una acción relacionada con autenticación y extrae un objeto
+con título y ejemplos de la página. El proveedor se selecciona con
+`AI_PROVIDER` en `.env`:
+
+```env
+AI_PROVIDER=ollama
+```
+
+Valores permitidos: `ollama`, `openai` y `gemini`.
+
+```powershell
 npm run test:observe
 ```
 
-Por defecto usa la configuración de Ollama.
+Para cambiarlo solo durante una ejecución en PowerShell:
+
+```powershell
+$env:AI_PROVIDER = "openai"
+npm run test:observe
+Remove-Item Env:AI_PROVIDER
+```
+
+## Ejecutar todos los ejemplos
+
+Este comando requiere que Ollama esté funcionando y que las dos claves de nube
+estén configuradas:
+
+```powershell
+npm run test:e2e:all
+```
+
+Si solamente desea comprobar el código sin consumir modelos ni abrir el
+navegador:
+
+```powershell
+npm test
+```
+
+`npm test` ejecuta la validación estricta de TypeScript. El flujo de GitHub
+Actions también ejecuta esta comprobación sin almacenar secretos.
 
 ## Qué hace la prueba de login
 
-La prueba abre:
+1. Stagehand abre la página de login.
+2. `act` identifica y completa los campos mediante instrucciones naturales.
+3. `observe` propone la acción para iniciar sesión.
+4. `act` ejecuta la acción observada.
+5. Un localizador CSS comprueba exactamente el mensaje de éxito.
+6. Se imprimen las métricas de inferencia.
+
+Las credenciales públicas del sitio de demostración se pasan como variables de
+Stagehand. En un sistema real deben proceder de variables de entorno o de un
+gestor de secretos.
+
+## Estructura
 
 ```text
-https://the-internet.herokuapp.com/login
+Stagehand-E2E-AI/
+├── .github/workflows/quality.yml
+├── src/
+│   ├── assert.ts
+│   ├── config.ts
+│   ├── login-scenario.ts
+│   ├── ollama-client.ts
+│   ├── run.ts
+│   └── stagehand.ts
+├── tests/
+│   ├── login-gemini.e2e.ts
+│   ├── login-ollama.e2e.ts
+│   ├── login-openai.e2e.ts
+│   └── observe-extract.e2e.ts
+├── .env.example
+├── package-lock.json
+├── package.json
+└── tsconfig.json
 ```
 
-Luego la IA ejecuta acciones sobre la interfaz:
+## Diseño de las pruebas
 
-```ts
-await page.act('Escribe el usuario tomsmith en el campo Username');
-await page.act('Escribe la contraseña SuperSecretPassword! en el campo Password');
-await page.act('Haz clic en el botón Login');
-```
-
-Después se valida el resultado con Playwright:
-
-```ts
-const flashMessage = await page.locator('#flash').innerText();
-assertIncludes(flashMessage, 'You logged into a secure area!', 'No se encontró el mensaje de login exitoso.');
-```
-
-## Por qué se usa una validación tradicional con Playwright
-
-Aunque Stagehand permite automatizar con IA, una buena práctica es separar:
-
-| Parte de la prueba | Herramienta recomendada |
+| Responsabilidad | Técnica |
 |---|---|
-| Interacción flexible con la UI | Stagehand |
-| Validación exacta del resultado | Playwright |
-| Evidencia o reporte | Playwright, Allure, ReportPortal o Serenity |
+| Encontrar y manipular controles dinámicos | `act` y `observe` de Stagehand |
+| Validar el resultado funcional | Localizador y aserción exacta |
+| Validar datos producidos por un LLM | Esquema Zod más aserciones |
+| Detectar errores en terminal o CI | Código de salida distinto de cero |
+| Comparar costo y desempeño | `stagehand.metrics()` |
 
-Esto evita que la prueba dependa completamente de la interpretación del modelo.
+La IA se reserva para los pasos que se benefician de flexibilidad. Una
+validación crítica no debe depender solo de que otro modelo interprete si la
+prueba pasó.
 
-## Ventajas para clase
+## Solución de problemas
 
-- Los estudiantes ven una prueba E2E real.
-- No se depende únicamente de selectores rígidos.
-- Se muestra el uso de instrucciones en lenguaje natural.
-- Se puede comparar IA local contra IA en la nube.
-- Se evidencia que la IA ayuda, pero no elimina la necesidad de validar correctamente.
+### No encuentra Chrome
 
-## Limitaciones importantes
+Defina la ruta del ejecutable en `.env`. Ejemplo para Windows:
 
-### Con Ollama
-
-- Puede ser más lento.
-- Puede fallar en páginas complejas.
-- Requiere suficiente RAM y CPU/GPU.
-- Algunos modelos locales no manejan bien salidas estructuradas.
-
-### Con OpenAI
-
-- Requiere API Key.
-- Consume créditos.
-- Depende de conexión a internet.
-- Es más estable que Ollama para razonamiento sobre UI.
-
-## Recomendación para clase
-
-Para una clase introductoria:
-
-```text
-Stagehand + Ollama + llama3.1
+```env
+CHROME_PATH=C:\Program Files\Google\Chrome\Application\chrome.exe
 ```
 
-Para una demostración más estable:
+### Falta una clave
 
-```text
-Stagehand + OpenAI gpt-4.1-mini
+El programa termina con un mensaje que indica la variable requerida. Configure
+`OPENAI_API_KEY` o `GOOGLE_GENERATIVE_AI_API_KEY` según el comando ejecutado.
+
+### Ollama no responde
+
+Compruebe el servicio y el modelo:
+
+```powershell
+ollama list
+Invoke-RestMethod http://localhost:11434/api/tags
 ```
 
-## Problemas comunes
+Los modelos pequeños pueden no respetar el esquema JSON que Stagehand necesita.
+Pruebe un modelo con mejor capacidad de instrucciones o use OpenAI/Gemini.
 
-### Error: Ollama no responde
+### Necesita más información de diagnóstico
 
-Verifique que Ollama esté activo:
+En `.env` cambie:
 
-```bash
-ollama run llama3.1
+```env
+STAGEHAND_LOG_LEVEL=debug
+HEADLESS=false
 ```
 
-También puede revisar:
+## Alcance académico
 
-```bash
-http://localhost:11434
-```
-
-### Error: modelo no encontrado
-
-Descargue el modelo:
-
-```bash
-ollama pull llama3.1
-```
-
-### Error: falta OPENAI_API_KEY
-
-Ejecute la prueba local:
-
-```bash
-npm run test:ollama
-```
-
-O configure la clave en `.env`.
-
-### La IA hace clic en el elemento equivocado
-
-Use instrucciones más específicas. Por ejemplo:
-
-```ts
-await page.act('Haz clic exactamente en el botón azul Login del formulario de autenticación');
-```
-
-## Mensaje pedagógico para los estudiantes
-
-Stagehand no reemplaza Playwright. Lo complementa.
-
-La IA es útil para interactuar con la interfaz de forma flexible, pero las pruebas profesionales deben conservar validaciones claras, trazabilidad, datos de prueba controlados y ejecución repetible.
-
+El uso de IA no elimina la necesidad de datos controlados, aserciones precisas,
+aislamiento, gestión de secretos y una estrategia de pruebas por capas. Estas
+pruebas consumen recursos del modelo, dependen de un navegador y pueden variar
+entre ejecuciones; no sustituyen las pruebas unitarias ni las pruebas de API.

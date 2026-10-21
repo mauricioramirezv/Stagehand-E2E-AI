@@ -1,41 +1,42 @@
 import 'dotenv/config';
 import { z } from 'zod';
-import { createOllamaStagehand } from '../src/stagehand-ollama.js';
+import { assertIncludes } from '../src/assert.js';
+import { selectedProvider } from '../src/config.js';
+import { run } from '../src/run.js';
+import { closeTestSession, createTestSession } from '../src/stagehand.js';
 
 async function main(): Promise<void> {
-  const stagehand = createOllamaStagehand();
+  const provider = selectedProvider();
+  const session = await createTestSession(provider);
 
   try {
-    await stagehand.init();
-    const page = stagehand.page;
+    await session.page.goto('https://the-internet.herokuapp.com/');
 
-    console.log('Abriendo página principal de The Internet...');
-    await page.goto('https://the-internet.herokuapp.com/');
+    const observations = await session.stagehand.observe(
+      'Encuentra el enlace del ejemplo de autenticación o login',
+      { page: session.page },
+    );
+    if (observations.data.length === 0) {
+      throw new Error('Observe no encontró el ejemplo de autenticación.');
+    }
 
-    console.log('La IA observará la página y buscará opciones relacionadas con login...');
-    const observations = await page.observe('Encuentra el enlace que permite probar autenticación o login');
-    console.log('Observaciones de la IA:');
-    console.log(observations);
-
-    console.log('La IA extraerá información estructurada de la página...');
-    const result = await page.extract({
-      instruction: 'Extrae el título principal de la página y una lista de cinco ejemplos disponibles.',
-      schema: z.object({
-        title: z.string(),
-        examples: z.array(z.string()).max(5)
-      })
+    const schema = z.object({
+      title: z.string(),
+      examples: z.array(z.string()).min(1).max(5),
     });
+    const extracted = await session.stagehand.extract(
+      'Extrae el título principal y hasta cinco nombres de ejemplos disponibles.',
+      schema,
+      { page: session.page },
+    );
 
-    console.log('Resultado estructurado:');
-    console.log(JSON.stringify(result, null, 2));
-
-    console.log('Prueba observe/extract finalizada correctamente.');
+    assertIncludes(extracted.data.title, 'The Internet', 'El título extraído no es el esperado.');
+    console.log('Primera acción observada:', observations.data[0]);
+    console.log('Datos extraídos:', extracted.data);
+    console.log('Métricas:', await session.stagehand.metrics());
   } finally {
-    await stagehand.close();
+    await closeTestSession(session);
   }
 }
 
-main().catch((error) => {
-  console.error('La prueba falló:', error);
-  process.exit(1);
-});
+run(main);

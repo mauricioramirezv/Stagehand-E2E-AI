@@ -1,24 +1,28 @@
 {
-  "name": "stagehand-E2E-AI",
-  "version": "1.0.0",
-  "description": "Ejemplo de pruebas E2E con Stagehand, Playwright, Ollama local y OpenAI opcional.",
+  "name": "stagehand-e2e-ai",
+  "version": "2.0.0",
+  "description": "Proyecto educativo de pruebas E2E con Stagehand, OpenAI, Gemini y Ollama.",
   "type": "module",
   "scripts": {
-    "install:browsers": "playwright install chromium",
-    "test:openai": "tsx tests/login-openai.e2e.ts",
-    "test:ollama": "tsx tests/login-ollama.e2e.ts",
-    "test:gemini": "tsx tests/login-gemini.e2e.ts",
-    "test:observe": "tsx tests/observe-extract.e2e.ts"
+    "typecheck": "tsc --noEmit",
+    "test": "npm run typecheck",
+    "test:openai": "node --import tsx tests/login-openai.e2e.ts",
+    "test:ollama": "node --import tsx tests/login-ollama.e2e.ts",
+    "test:gemini": "node --import tsx tests/login-gemini.e2e.ts",
+    "test:observe": "node --import tsx tests/observe-extract.e2e.ts",
+    "test:e2e:all": "npm run test:ollama && npm run test:openai && npm run test:gemini && npm run test:observe",
+    "check": "npm run typecheck"
   },
   "dependencies": {
-    "@browserbasehq/stagehand": "latest",
-    "dotenv": "^16.4.7",
-    "openai": "^4.104.0",
-    "playwright": "^1.53.0",
-    "zod": "^3.24.2"
+    "@browserbasehq/stagehand": "4.3.0",
+    "dotenv": "18.0.8",
+    "zod": "4.4.3"
   },
   "devDependencies": {
-    "tsx": "^4.19.2",
-    "typescript": "^5.8.3"
+    "tsx": "4.23.15",
+    "typescript": "7.0.2"
+  },
+  "engines": {
+    "node": ">=22.18.0"
   }
 }
